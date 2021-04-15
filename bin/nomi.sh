@@ -1,1 +1,1 @@
-java -jar npm-miner.jar "$@"
+java -jar nomi.jar "$@"
