@@ -2,16 +2,10 @@ package org.dxworks.npmminer
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.io.File
-import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.name
-import kotlin.streams.toList
 
 val fileNames = listOf("package.json", "package-lock.json")
 
-@ExperimentalPathApi
 fun main(args: Array<String>) {
     if (args.size != 1) {
         throw IllegalArgumentException("Bad arguments! Please provide only one argument, namely the path to the folder containing the source code.")
@@ -24,11 +18,9 @@ fun main(args: Array<String>) {
     println("Starting NoMi (Npm Miner)\n")
     println("Reading Files...")
 
-    val baseFolderPath = baseFolder.toPath()
-    val packageFiles = Files.walk(baseFolderPath)
-        .filter { it.isRegularFile() }
+    val packageFiles = baseFolder.walkTopDown()
+        .filter { it.isFile }
         .filter { fileNames.contains(it.name) }
-        .toList()
 
 
     val npmProjects = listOf<NpmProject>()
