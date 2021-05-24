@@ -6,5 +6,5 @@ results:
 
 commands:
   - name: Mine Npm
-    win: java -jar nomi.jar ${repo}
-    unix: java -jar nomi.jar ${repo}
+    win: java -jar nomi.jar "${repo}"
+    unix: java -jar nomi.jar "${repo}"
