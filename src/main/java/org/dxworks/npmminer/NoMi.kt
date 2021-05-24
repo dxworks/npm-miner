@@ -1,6 +1,7 @@
 package org.dxworks.npmminer
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.io.File
@@ -38,12 +39,19 @@ fun main(args: Array<String>) {
                 } ?: emptyList())
     }.toMap()
 
+    val regex = Regex("[<>=~^]")
+
+    ilDeps.forEach {
+        it.value.forEach { ilDep ->
+            ilDep.version = ilDep.version?.let { version -> regex.replace(version,"") }
+        }
+    }
 
     val resultsPath = Path.of("results")
     resultsPath.toFile().mkdirs()
 
     val modelPath = Path.of("results", "npm-model.json")
-    val inspectorLibPath = Path.of("results", "il-deps.json")
+    val inspectorLibPath = Path.of("results", "il-npm-deps.json")
 
     println("Writing Results...")
 
@@ -87,8 +95,8 @@ data class NpmPackageInfo(
     val license: String? = null,
     val keywords: List<String> = emptyList(),
     val homepage: String? = null,
-    val bugs: Map<String, String> = emptyMap(),
-    val repository: Map<String, String> = emptyMap(),
+    //val bugs: Map<String, String> = emptyMap(),
+    //val repository: Map<String, String> = emptyMap(),
     val dependencies: Map<String, String> = emptyMap(),
     val devDependencies: Map<String, String> = emptyMap()
 )
@@ -117,8 +125,18 @@ fun getNpmProjects(packageFiles: List<File>): List<NpmProject> =
         val packageFile = files.find { it.name == "package.json" }
         val packageLockFile = files.find { it.name == "package-lock.json" }
 
-        NpmProject(projName, packageFile.toString(), packageLockFile.toString(),
-            packageFile?.let { jacksonObjectMapper().readValue<NpmPackageInfo>(it) },
-            packageLockFile?.let { jacksonObjectMapper().readValue<NpmPackageLockInfo>(it) }
-        )
+        try {
+            NpmProject(projName, packageFile.toString(), packageLockFile.toString(),
+                packageFile?.let {
+                    jacksonObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true)
+                        .readValue<NpmPackageInfo>(it)
+                },
+                packageLockFile?.let {
+                    jacksonObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true)
+                        .readValue<NpmPackageLockInfo>(it)
+                }
+            )
+        } catch (e: Exception) {
+            NpmProject(projName, packageFile.toString(), packageLockFile.toString(), null, null)
+        }
     }
