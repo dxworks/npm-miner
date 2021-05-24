@@ -1,0 +1,10 @@
+name: Npm Miner
+run: once
+
+results:
+  - dir: ${instrument}/results
+
+commands:
+  - name: Mine Npm
+    win: java -jar nomi.jar ${repo}
+    unix: java -jar nomi.jar ${repo}
