@@ -86,7 +86,7 @@ data class NpmProject(
     val yarnLockPath: String,
     val packageInfo: NpmPackageInfo?,
     val packageLockInfo: NpmPackageLockInfo?,
-    val yarnLockContent: List<String>?
+    val yarnLockContent: String?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -138,7 +138,7 @@ fun getNpmProjects(packageFiles: List<File>): List<NpmProject> =
                     jacksonObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true)
                         .readValue<NpmPackageLockInfo>(it)
                 },
-                File(yarnLockFile.toString()).bufferedReader().readLines()
+                File(yarnLockFile.toString()).readText()
             )
         } catch (e: Exception) {
             NpmProject(projName, packageFile.toString(), packageLockFile.toString(), yarnLockFile.toString(),null, null, null)
