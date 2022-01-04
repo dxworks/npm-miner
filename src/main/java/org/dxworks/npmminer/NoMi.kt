@@ -7,7 +7,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import java.io.File
 import java.nio.file.Path
 
-val fileNames = listOf("package.json", "package-lock.json")
+val fileNames = listOf("package.json", "package-lock.json", "yarn.lock")
 lateinit var baseFolder: File
 
 fun main(args: Array<String>) {
@@ -83,8 +83,10 @@ data class NpmProject(
     val name: String,
     val packagePath: String,
     val packageLockPath: String,
+    val yarnLockPath: String,
     val packageInfo: NpmPackageInfo?,
-    val packageLockInfo: NpmPackageLockInfo?
+    val packageLockInfo: NpmPackageLockInfo?,
+    val yarnLockContent: List<String>?
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -124,9 +126,10 @@ fun getNpmProjects(packageFiles: List<File>): List<NpmProject> =
         val projName = folder.relativeTo(baseFolder).toString()
         val packageFile = files.find { it.name == "package.json" }
         val packageLockFile = files.find { it.name == "package-lock.json" }
+        val yarnLockFile = files.find { it.name == "yarn.lock" }
 
         try {
-            NpmProject(projName, packageFile.toString(), packageLockFile.toString(),
+            NpmProject(projName, packageFile.toString(), packageLockFile.toString(), yarnLockFile.toString(),
                 packageFile?.let {
                     jacksonObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true)
                         .readValue<NpmPackageInfo>(it)
@@ -134,9 +137,10 @@ fun getNpmProjects(packageFiles: List<File>): List<NpmProject> =
                 packageLockFile?.let {
                     jacksonObjectMapper().configure(JsonParser.Feature.ALLOW_COMMENTS, true)
                         .readValue<NpmPackageLockInfo>(it)
-                }
+                },
+                File(yarnLockFile.toString()).bufferedReader().readLines()
             )
         } catch (e: Exception) {
-            NpmProject(projName, packageFile.toString(), packageLockFile.toString(), null, null)
+            NpmProject(projName, packageFile.toString(), packageLockFile.toString(), yarnLockFile.toString(),null, null, null)
         }
     }
